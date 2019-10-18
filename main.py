@@ -1,50 +1,118 @@
 from pyspark.sql import SparkSession
 import pyspark
+import os
+
+
+
+# This funciton find all .csv files' names
+# PARAMETERS :
+# filePath -> Which folder must be detected.
+# It returns .csv files' names (without .csv parts)
+def csvFileDetecter (filePath):
+    # This code is extract all files at the path named filePath
+    onlyFiles = [f for f in os.listdir(filePath) if os.path.isfile(os.path.join(filePath, f))]
+
+    # indis is used for scanning onlyFiles elements
+    indis = 0
+    # Some file that is not .csv file must be deleted on onlyFiles array
+    # remove() function is used for deleting file that is not .csv file.
+    # But this function changes the length of array. So, while loop is used.
+    while indis < len(onlyFiles):
+        # .csv file is detected. So, it is removed but indis value must be the same.
+        if(onlyFiles[indis].find('.csv') == -1):
+            onlyFiles.remove(onlyFiles[indis])
+        # Otherwise indis value should be increased.
+        else :
+            indis = indis + 1
+
+    # This function's return used for detecting relevant excels' name
+    # So, we have to clear '.csv' parts
+    for indis in range(len(onlyFiles)):
+        onlyFiles[indis] = onlyFiles[indis][:onlyFiles[indis].find('.csv')]
+
+    return onlyFiles
 
 
 spark = SparkSession.builder.appName("PCA").getOrCreate()
 
 dataFilePath = "E:\\PERSONAL ITEMS\\LESSON ITEMS\\SEVENTH TERM\\BİTİRME\\Data\\AnomalyDetection\\dataset"
+outputExcelPath = "E:\\PERSONAL ITEMS\\LESSON ITEMS\\SEVENTH TERM\\BİTİRME\\Analiz\\Excel Results"
 
 #data = spark.read.option("header","true").option("inferSchema","true").format("csv")
 df = spark.read.option("header","true").option("inferSchema","true").csv(dataFilePath + "\\1.csv")
 
 from pyspark.ml.feature import PCA,StandardScaler,VectorAssembler
 
+def PCA_Implementation(csvFileNames, columns, testNumbers, pcaKValues,dataPath, outputExcelPath) :
+    for csv in range(len(csvFileNames)):
+        df = spark.read.option("header","true").option("inferSchema","true").csv(dataPath + "\\" + csvFileNames[csv] + ".csv")
+        for col in range(len(columns)):
+            for test in range(testNumbers[col]):
 
+                # VectorAssembler reduced columns that should be multiple columns to one column value
+                assembler = VectorAssembler(
+                    #inputCols=["ram_usage","cpu_percent","io_usage","network_usage"],
+                    inputCols=columns[col],
+                    outputCol="features"
+                )
 
-column_names = ["ram_usage","container","cpu_percent","ram_limit","io_usage","io_limit","network_limit","node","time","network_usage","pids"]
+                # It transformed.
+                output = assembler.transform(df)
 
-assembler = VectorAssembler(
-    #inputCols=["ram_usage","cpu_percent","io_usage","network_usage"],
-    inputCols=["cpu_percent","ram_usage"],
-    outputCol="features"
-)
+                scaler = StandardScaler(inputCol="features",
+                                        outputCol="scaledFeatures",
+                                        withStd=True,
+                                        withMean=False)
 
-output = assembler.transform(df)
+                # Compute summary statistics by fitting the StandardScaler
+                scalerModel = scaler.fit(output)
 
-scaler = StandardScaler(inputCol="features",
-                        outputCol="scaledFeatures",
-                        withStd=True,
-                        withMean=False)
+                # Normalize each feature to have unit standard deviation.
+                scaledData = scalerModel.transform(output)
+                #scaledData.show()
 
-# Compute summary statistics by fitting the StandardScaler
-scalerModel = scaler.fit(output)
+                pca = PCA(k=pcaKValues[col][test], inputCol="features", outputCol="pca_features").fit(scaledData)
 
-# Normalize each feature to have unit standard deviation.
-scaledData = scalerModel.transform(output)
-scaledData.show()
+                pcaDf = pca.transform(scaledData)
+                results = pcaDf.select("pca_features")
+                #results.show()
 
-pca = PCA(k=2, inputCol="features", outputCol="pca_features").fit(scaledData)
+                # Results extracted to excel file
+                # Here excel file's name arrangement
+                # Format :
+                # [csv_file_name]_[column_name]_K=[pca_k_value].xlsx
+                # OR for multiple column usage :
+                # [csv_file_name]_[column_name]+[column_name]+[column_name]_K=[pca_k_value].xlsx
 
-pcaDf = pca.transform(scaledData)
-results = pcaDf.select("pca_features")
-results.show()
+                # As a string, csv file name is assign as a first value.
+                fileName = csvFileNames[csv]
+                # According to multiple column name usage, they are added.
+                for ind in range(len(columns[col])):
+                    # For multiple column usage, '+' added to between 2 column name
+                    if(ind > 0):
+                        fileName += '+' + columns[col][ind]
+                    # For first column name, '_' is used as reagent
+                    else :
+                        fileName += '_' + columns[col][ind]
 
-split_col = pyspark.sql.functions.split(results['pca_features'].values.str, ',')
-results = results.withColumn('pca_feature_1', split_col.getItem(0))
-results = results.withColumn('pca_feature_2', split_col.getItem(1))
-results.show()
+                # Finally used k value at PCA algorithm and file tpye is added.
+                fileName += '_K=' + str(pcaKValues[col][test]) + '.xlsx'
 
-#results.toPandas().to_excel('1-1-cpu-ram-2.xlsx')
+                # Here, file is extracted to target path.
+                results.toPandas().to_excel(fileName)
+                print(fileName + " is created at " + outputExcelPath)
+                print('\n')
 
+csvFileNames = csvFileDetecter(dataFilePath)
+#print(csvFileNames)
+
+#print(df.columns)
+relevant_cols = [['cpu_percent'],['ram_usage'],['network_usage'],['io_usage'],["cpu_percent","ram_usage"]]
+#print(relevant_cols)
+
+pca_test_numbers = [1,1,1,1,2]
+pca_tests_k_values = [[1],[1],[1],[1],[1,2]]
+#print(pca_test_number)
+#print(pca_tests_k_values)
+
+PCA_Implementation(csvFileNames, relevant_cols, pca_test_numbers, pca_tests_k_values, dataFilePath , outputExcelPath)
