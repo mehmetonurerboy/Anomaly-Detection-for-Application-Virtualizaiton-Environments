@@ -12,7 +12,8 @@ from pyspark.ml.feature import PCA,StandardScaler,VectorAssembler
 column_names = ["ram_usage","container","cpu_percent","ram_limit","io_usage","io_limit","network_limit","node","time","network_usage","pids"]
 
 assembler = VectorAssembler(
-    inputCols=["ram_usage","cpu_percent","ram_limit","io_usage","io_limit","network_limit","time","network_usage","pids"],
+    #inputCols=["ram_usage","cpu_percent","io_usage","network_usage"],
+    inputCols=["cpu_percent"],
     outputCol="features"
 )
 
@@ -36,4 +37,6 @@ pcaDf = pca.transform(scaledData)
 results = pcaDf.select("pca_features")
 results.show()
 
-results.toPandas().to_csv('1-1.csv')
+
+
+results.toPandas().to_csv('1-1-cpu.csv')
