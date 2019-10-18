@@ -103,6 +103,43 @@ def PCA_Implementation(csvFileNames, columns, testNumbers, pcaKValues,dataPath, 
                 print(fileName + " is created at " + outputExcelPath)
                 print('\n')
 
+def wrongNumberException(arrayLength,textString) :
+    value = int(input(textString))
+    while(value < 0 or value > arrayLength):
+        print("YOU ENTERED WRONG NUMBER! PLEASE ENTER VALID NUMBER.")
+        value = int(input("Enter file name indis (the number that wrote on the left of its name) : "))
+    return value
+
+def valuePrinting(array) :
+    for ind in range(len(array)):
+        print('[' + str(ind) + '] : ' + array[ind])
+
+
+def PCA_calculation(dataPath):
+    csvFileNames = csvFileDetecter(dataPath)
+    print("In data path, there are these files.\n")
+    for ind in range(len(csvFileNames)):
+        print('[' + str(ind) + '] : ' + csvFileNames[ind])
+    print("Select one of them.")
+
+    csvInput = wrongNumberException(len(csvFileNames),"Enter file name indis (the number that wrote on the left of its name) : ")
+
+    print('\n\n\n')
+
+    df = spark.read.option("header", "true").option("inferSchema", "true").csv(dataPath + "\\" + csvFileNames[csvInput] + ".csv")
+    column_names = df.columns
+    print("There are these columns in data.\n\nCOLUMN NAMES :")
+    valuePrinting(column_names)
+
+    col_count = int(input("Enter the number of column that you want to reduce : "))
+    col_values = []
+    for ind in range(col_count):
+        col_values.append(column_names[wrongNumberException(len(column_names),"Enter the column indis : ")])
+
+    pca_k_value = int(input("Enter the K value for PCA algorithm : "))
+
+    
+
 csvFileNames = csvFileDetecter(dataFilePath)
 #print(csvFileNames)
 
@@ -115,4 +152,5 @@ pca_tests_k_values = [[1],[1],[1],[1],[1,2]]
 #print(pca_test_number)
 #print(pca_tests_k_values)
 
-PCA_Implementation(csvFileNames, relevant_cols, pca_test_numbers, pca_tests_k_values, dataFilePath , outputExcelPath)
+#PCA_Implementation(csvFileNames, relevant_cols, pca_test_numbers, pca_tests_k_values, dataFilePath , outputExcelPath)
+PCA_calculation(dataFilePath)
