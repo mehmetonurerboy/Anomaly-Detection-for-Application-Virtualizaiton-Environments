@@ -170,7 +170,8 @@ def PCA_calculation(dataFrame,csvFileName,column_values,pca_k_value,output_path)
     results = pcaDf.select("pca_features")
     # results.show()
 
-    return pcaDf
+    print("echo success")
+    return results
 
 csvFileNames = csvFileDetecter(dataFilePath)
 #print(csvFileNames)
@@ -209,4 +210,4 @@ pca_k_value = int(input("Enter the K value for PCA algorithm : "))
 
 pca_result = PCA_calculation(df,csvFileNames[csvInput],col_values,pca_k_value,outputExcelPath)
 
-print(pca_result.head())
+print(pca_result.values)
