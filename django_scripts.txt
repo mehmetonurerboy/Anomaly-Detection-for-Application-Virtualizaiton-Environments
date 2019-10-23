@@ -1,0 +1,17 @@
+- Up to django page(after activate the environment at its location of pc)
+django-admin startproject pcaTry
+- after that, cd pcaTry and execute these :
+python manage.py runserver
+
+- migrating django
+python manage.py migrate
+
+- create superuser
+python manage.py createsuperuser
+
+- Starting an app
+python manage.py startapp products
+
+- After creation and coding the app (also at any change is occured)
+python manage.py makemigrations
+python manage.py migrate
