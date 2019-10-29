@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
-import pyspark
 import os
+import pca
 
 
 
@@ -173,6 +173,55 @@ def PCA_calculation(dataFrame,csvFileName,column_values,pca_k_value,output_path)
     print("echo success")
     return results
 
+# This function checks the equivalance between the number of indices that user entered and his/her indice enterance
+def entered_column_count_control(input_string, column_count):
+    if input_string.count(',') == (column_count-1) :
+        return True
+    elif input_string.count(',') < (column_count-1):
+        print("YOU ENTERED INDICE VALUES BUT THERE ARE MINUS VALUES! PLEASE ENTER AGAIN!")
+        return False
+    else :
+        print("YOU ENTERD EXTRA INDICE VALUES! PLEASE ENTER AGAIN!")
+        return False
+
+def entered_column_indice_control(input_string, dataFrame_column_count):
+    indis = 0
+    indice_values = input_string.split(',')
+
+    while (indis < dataFrame_column_count) and (int(indice_values[indis]) >= 0) and (int(indice_values[indis]) < dataFrame_column_count) :
+        indis = indis + 1
+
+    if indis == dataFrame_column_count :
+        return int(indice_values)
+    else :
+        print("YOU ENTERD WRONG INDICE VALUE! PLEASE ENTER AGAIN!")
+        return []
+
+def column_input_enterance(dataFrame, column_names, selected_count_number):
+    input_string = input("Enter the indices of column that you want to use at PCA calculation. "
+                         "[For seperating indices, you have to use comma(',') | Ex : 1,2,3] : ")
+
+    while(entered_column_count_control(input_string,selected_count_number) == False) :
+        input_string = input("Enter the indices of column that you want to use at PCA calculation. "
+                             "[For seperating indices, you have to use comma(',') | Ex : 1,2,3] : ")
+
+    entered_column_indices = entered_column_indice_control(input_string,len(column_names))
+    while(entered_column_indices.count() == 0):
+        input_string = input("Enter the indices of column that you want to use at PCA calculation. "
+                             "[For seperating indices, you have to use comma(',') | Ex : 1,2,3] : ")
+        entered_column_indices = entered_column_indice_control(input_string,column_names.count())
+
+    selected_column_names = []
+
+    for indis in range(len(entered_column_indices)) :
+        selected_column_names.append(column_names[entered_column_indices[indis]])
+
+    return selected_column_names
+
+
+
+
+
 csvFileNames = csvFileDetecter(dataFilePath)
 #print(csvFileNames)
 
@@ -187,6 +236,7 @@ pca_tests_k_values = [[1],[1],[1],[1],[1,2]]
 
 #PCA_Implementation(csvFileNames, relevant_cols, pca_test_numbers, pca_tests_k_values, dataFilePath , outputExcelPath)
 
+"""
 print("In data path, there are these files.\n")
 valuePrinting(csvFileNames)
 print("\n")
@@ -211,3 +261,31 @@ pca_k_value = int(input("Enter the K value for PCA algorithm : "))
 pca_result = PCA_calculation(df,csvFileNames[csvInput],col_values,pca_k_value,outputExcelPath)
 
 print(pca_result.values)
+"""
+
+print("In data path, there are these files.\n")
+valuePrinting(csvFileNames)
+print("\n")
+print("Select one of them.")
+csvInput = wrongNumberException(len(csvFileNames),
+                                "Enter file name indis (the number that wrote on the left of its name) : ")
+
+print('\n\n\n')
+
+df = spark.read.option("header", "true").option("inferSchema", "true").csv(
+    dataFilePath + "\\" + csvFileNames[csvInput] + ".csv")
+column_names = df.columns
+print("There are these columns in data.\n\nCOLUMN NAMES :")
+valuePrinting(column_names)
+
+col_count = int(input("Enter the number of column that you want to use in calculation : "))
+#selected_column_names = column_input_enterance(df, column_names, col_count)
+selected_column_names = []
+selected_column_indices = input("Enter indice values : ").split(',')
+for indis in range(len(selected_column_indices)):
+    selected_column_names.append(column_names[int(selected_column_indices[indis])])
+
+pca.anomalyDetectionWithPCA(dataFrame=df, selected_column_names=selected_column_names)
+
+
+
