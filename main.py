@@ -285,7 +285,9 @@ selected_column_indices = input("Enter indice values : ").split(',')
 for indis in range(len(selected_column_indices)):
     selected_column_names.append(column_names[int(selected_column_indices[indis])])
 
-pca.anomalyDetectionWithPCA(dataFrame=df, selected_column_names=selected_column_names)
+confidence_level = float(input("Please enter the confidence level : (formatted like 0.1) : "))
+
+pca.anomalyDetectionWithPCA(dataFrame=df, selected_column_names=selected_column_names, confidence_level=confidence_level)
 
 
 
