@@ -287,7 +287,22 @@ for indis in range(len(selected_column_indices)):
 
 confidence_level = float(input("Please enter the confidence level : (formatted like 0.1) : "))
 
-pca.anomalyDetectionWithPCA(dataFrame=df, selected_column_names=selected_column_names, confidence_level=confidence_level)
+anomaly_value_indices = pca.anomalyDetectionWithPCA(dataFrame=df, selected_column_names=selected_column_names, confidence_level=confidence_level)
 
+anomaly_column = []
 
+for ind in range(df.count()):
+    anomaly_column.append(0)
+
+for ind in range(len(anomaly_value_indices)):
+    anomaly_column[anomaly_value_indices[ind]] = 1
+
+print(anomaly_column)
+
+df_pandas = df.select(selected_column_names).toPandas()
+#print(df_pandas)
+print(type(df_pandas))
+df_pandas['outlier_status'] = anomaly_column
+
+print(df_pandas)
 
