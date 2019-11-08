@@ -143,6 +143,7 @@ def obtain_main_trend(eigen_values, confidence_level):
 
     return main_trend_indices,anomaly_trend_indices
 
+# return indice values of anomaly values.
 def anomalyDetectionWithPCA(dataFrame, selected_column_names, confidence_level):
 
     normalized_y_values = obtain_normalized_data(dataFrame,selected_column_names)
@@ -151,6 +152,7 @@ def anomalyDetectionWithPCA(dataFrame, selected_column_names, confidence_level):
     print("selected colum names : ")
     print(selected_column_names)
     correlation_matrix = getCorrelationMatrix(normalized_y_values, selected_column_names)
+    print("\n\n")
     print("correlation matrix : ")
     print(correlation_matrix)
     #print(len(correlation_matrix))
@@ -161,15 +163,18 @@ def anomalyDetectionWithPCA(dataFrame, selected_column_names, confidence_level):
 
     w, v = LA.eig(correlation_matrix_with_numpy)
     c_alpha = 1 - confidence_level
-
+    print("\n\n")
     print("eigen value list : ")
     print(w)
+    print("\n\n")
     print("eigen vector list : ")
     print(v)
 
     main_trend_indis,anomaly_trend_indis = obtain_main_trend(w,c_alpha)
+    print("\n\n")
     print("main trend indices : ")
     print(main_trend_indis)
+    print("\n\n")
     print("anomaly trend indis : ")
     print(anomaly_trend_indis)
 
@@ -192,12 +197,14 @@ def anomalyDetectionWithPCA(dataFrame, selected_column_names, confidence_level):
     eig_value_sum2 = 0
     eig_value_sum3 = 0
 
+    print("\n\n")
     print("len of anomaly_trend_indis : " + str(len(anomaly_trend_indis)))
     for indis in range(len(anomaly_trend_indis)):
         eig_value_sum += w[anomaly_trend_indis[indis]]
         eig_value_sum2 += w[anomaly_trend_indis[indis]]**2
         eig_value_sum3 += w[anomaly_trend_indis[indis]]**3
-    
+
+    print("\n\n")
     print("eig_value_sum : " + str(eig_value_sum))
     print("eig_value_sum2 : " + str(eig_value_sum2))
     print("eig_value_sum3 : " + str(eig_value_sum3))
@@ -220,30 +227,40 @@ def anomalyDetectionWithPCA(dataFrame, selected_column_names, confidence_level):
     #print('\n\n')
     #print(v.T)
     #print('\n\n')
-    
 
-
+    print("\n\n")
     print("eigen vectors : ")
     print(v)
+    print("\n\n")
     print("eigen vectors for trend line : ")
     print(v[:,main_trend_indis])
     transpoze_multiply = np.dot(v[:,main_trend_indis],v[:,main_trend_indis].T)
+    print("\n\n")
     print("calculated transpoze matrix : ")
     print(transpoze_multiply)
     print(np.subtract(np.eye(len(v[0])),np.dot(v[:,main_trend_indis],v[:,main_trend_indis].T)))
     projection_matrix = np.subtract(np.eye(4),transpoze_multiply)
     #projection_matrix = 1 - np.dot(v[:main_trend_indis],v[:main_trend_indis].T)
+    print("\n\n")
     print("projection matrix : ")
     print(projection_matrix)
 
     #suspected_values = [[]]
     y_values = obtainY_values(dataFrame,selected_column_names)
 
+    print("\n\n")
     print("y_values length : " + str(len(y_values)))
     print("dataFrame count : " + str(dataFrame.count()))
 
     outlier_values = detectAnomalyValueIndices(dataFrame, normalized_y_values, threshold_value, projection_matrix)
     #print(outlier_values)
+    print("\n\n")
     print("outlier number : "+ str(len(outlier_values)))
+    print("\n\n")
+    print("outlier values : ")
+    print(outlier_values)
+
+    return outlier_values
+
 
 
