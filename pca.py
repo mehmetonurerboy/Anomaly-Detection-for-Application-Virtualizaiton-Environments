@@ -8,7 +8,7 @@ def obtain_normalized_data(dataFrame, selected_column_names):
     queried_values = dataFrame.select(selected_column_names).rdd.flatMap(lambda x: x).collect()
 
     # print(queried_values)
-    queried_matrix = np.reshape(np.array(queried_values), (-1, 4))
+    queried_matrix = np.reshape(np.array(queried_values), (-1, len(selected_column_names)))
     #print(queried_matrix)
     print(queried_matrix[:,0])
     print(queried_matrix[0,:])
@@ -239,7 +239,7 @@ def anomalyDetectionWithPCA(dataFrame, selected_column_names, confidence_level):
     print("calculated transpoze matrix : ")
     print(transpoze_multiply)
     print(np.subtract(np.eye(len(v[0])),np.dot(v[:,main_trend_indis],v[:,main_trend_indis].T)))
-    projection_matrix = np.subtract(np.eye(4),transpoze_multiply)
+    projection_matrix = np.subtract(np.eye(len(selected_column_names)),transpoze_multiply)
     #projection_matrix = 1 - np.dot(v[:main_trend_indis],v[:main_trend_indis].T)
     print("\n\n")
     print("projection matrix : ")
@@ -258,7 +258,7 @@ def anomalyDetectionWithPCA(dataFrame, selected_column_names, confidence_level):
     print("outlier number : "+ str(len(outlier_values)))
     print("\n\n")
     print("outlier values : ")
-    print(outlier_values)
+    #print(outlier_values)
 
     return outlier_values
 
