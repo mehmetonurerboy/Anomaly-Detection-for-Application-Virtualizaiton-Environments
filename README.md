@@ -1,2 +1,2 @@
 # Anomaly-Detection-for-Application-Virtualizaiton-Environments
-Thesis for Graduating Yıldız Technical University Computer Engineering Department
+Senior Project for Yıldız Technical University Computer Engineering Department Graduation
