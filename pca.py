@@ -65,7 +65,7 @@ def obtainY_values(dataFrame, selected_column_names) :
     queried_values = dataFrame.select(selected_column_names).rdd.flatMap(lambda x : x).collect()
 
     #print(queried_values)
-    queried_matrix = np.reshape(np.array(queried_values), (-1, 4))
+    queried_matrix = np.reshape(np.array(queried_values), (-1, len(selected_column_names)))
     #print(queried_matrix)
 
     #print(queried_matrix)

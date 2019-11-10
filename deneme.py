@@ -2,7 +2,7 @@ import pca
 from pyspark.sql import SparkSession
 import pandas as pd
 
-filePath = "C:\\Users\\onur.erboy\\Desktop\\Personel Files\\Datas\\Anomaly Detection"
+filePath = "C:\\Users\\M.O.ERBOY\\Desktop\\Datas"
 
 spark = SparkSession.builder.appName("PCA").getOrCreate()
 
@@ -14,7 +14,7 @@ column_names = df.columns
 print(column_names)
 
 
-selected_colum_names = column_names[:-1]
+selected_colum_names = column_names[1:-1]
 print(selected_colum_names)
 
 confidence_level = float(input("Please enter the confidence level : (formatted like 0.1) : "))
@@ -34,7 +34,8 @@ for ind in range(len(anomaly_value_indices)):
 
 #print(anomaly_column)
 
-real_anomaly_values = pd.read_csv(filepath_or_buffer=filePath+'\\muskY.csv', sep=',', header=None).values.tolist()
+#real_anomaly_values = pd.read_csv(filepath_or_buffer=filePath+'\\muskY.csv', sep=',', header=None).values.tolist()
+real_anomaly_values = df.select("Class").toPandas().values.tolist()
 
 #print(real_anomaly_values)
 print(len(real_anomaly_values))
@@ -109,6 +110,11 @@ print("real_is_normal_calculated_is_anomaly rate : " + str(len(real_is_normal_ca
 
 print("\n\n\n\n")
 print("with counts")
+
+print("real_is_anomaly_calculated_is_anomaly_count : " + str(real_is_anomaly_calculated_is_anomaly_count))
+print("real_is_normal_calculated_is_normal_count : " + str(real_is_normal_calculated_is_normal_count))
+print("real_is_anomaly_calculated_is_normal_count : " + str(real_is_anomaly_calculated_is_normal_count))
+print("real_is_normal_calculated_is_anomaly_count : " + str(real_is_normal_calculated_is_anomaly_count))
 
 print("real_is_anomaly_calculated_is_anomaly rate : " + str(real_is_anomaly_calculated_is_anomaly_count / df.count()))
 print("real_is_normal_calculated_is_normal rate : " + str(real_is_normal_calculated_is_normal_count / df.count()))
