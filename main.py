@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 import os
 import pca
+import data_cleaner
 
 
 
@@ -216,10 +217,50 @@ def column_input_enterance(dataFrame, column_names, selected_count_number):
     for indis in range(len(entered_column_indices)) :
         selected_column_names.append(column_names[entered_column_indices[indis]])
 
-    return selected_column_names
+    return entered_column_indices,selected_column_names
 
+def obtain_anomaly_values(dataframe, selected_column_names, anomaly_indices):
+    dataSet = dataframe.select(selected_column_names).toPandas().values.tolist()
 
+    anomaly_values = [[]]
+    for indis in range(len(anomaly_indices)):
+        anomaly_values.insert(indis,dataSet[anomaly_indices[indis]])
 
+    anomaly_values.remove(anomaly_values[len(anomaly_values)-1])
+
+    return anomaly_values
+
+def out_bound_of_normal_distribution(anomaly_values, mean, std):
+    out_bound_of_anomaly_indices = []
+    print("len anomaly_values : " + str(len(anomaly_values)))
+    print("len anomaly_values column : " + str(len(anomaly_values[0])))
+    print("len mean : " + str(len(mean)))
+    print("len std : " + str(len(std)))
+    for row in range(len(anomaly_values)):
+        is_out_of_bound = 0
+        for indis in range(len(mean)):
+            if anomaly_values[row][indis] < (mean[indis] - std[indis]) or \
+                    anomaly_values[row][indis] > (mean[indis] + std[indis]):
+                is_out_of_bound = 1
+        print(row)
+        print(is_out_of_bound)
+        if is_out_of_bound == 1:
+            out_bound_of_anomaly_indices.append(row)
+
+    return out_bound_of_anomaly_indices
+
+def cleaned_from_anomalies_dataframe(dataframe, selected_column_indice, anomaly_values, anomaly_indices, mean_array, std_array, arranged_data_path):
+    pandas_df = dataframe.toPandas()
+
+    for row in range(len(anomaly_values)):
+        for indis in range(len(selected_column_indice)):
+            if anomaly_values[row][indis] < (mean_array[indis] - std_array[indis]):
+                pandas_df.iloc[anomaly_indices[row]][selected_column_indice[indis]] = mean_array[indis] - std_array[indis]
+
+            if anomaly_values[row][indis] > (mean_array[indis] + std_array[indis]):
+                pandas_df.iloc[anomaly_indices[row]][selected_column_indice[indis]] = mean_array[indis] + std_array[indis]
+
+    pandas_df.toPandas().to_excel(arranged_data_path + '\\' + 'cleaned_data.xlsx')
 
 
 csvFileNames = csvFileDetecter(dataFilePath)
@@ -305,4 +346,38 @@ print(type(df_pandas))
 df_pandas['outlier_status'] = anomaly_column
 
 print(df_pandas)
+
+mean, std = data_cleaner.getStatisticsOfDataFrame(df,selected_column_names)
+print("\n\n")
+print("Mean values : ")
+print(mean)
+print("\n\n")
+print("standard deviation values : ")
+print(std)
+
+print("\n\n")
+for indis in range(len(selected_column_names)):
+    print("Column | " + selected_column_names[indis] + " : ")
+    print("Lower limit : " + str(mean[indis] - 3 * std[indis]))
+    print("Upper limit : " + str(mean[indis] + 3 * std[indis]))
+    print("\n")
+
+print("\n\n\n")
+print("Anomaly values : ")
+
+
+anomaly_values = obtain_anomaly_values(dataframe=df, selected_column_names=selected_column_names, anomaly_indices=anomaly_value_indices)
+for indis in range(len(anomaly_values)):
+    print(anomaly_values[indis])
+
+out_bound_anomalies = out_bound_of_normal_distribution(anomaly_values,mean,std)
+print("\n\n")
+print("len of anomalies : " + str(len(anomaly_values)))
+print("\n\n")
+print("len of out bound anomalies : " + str(len(out_bound_anomalies)))
+
+output_cleaned_data_path = "E:\\PERSONAL ITEMS\\LESSON ITEMS\\SEVENTH TERM\\BİTİRME\\Analiz\\Temizlenmis Veri"
+
+df_new = cleaned_from_anomalies_dataframe(df,selected_column_indices,anomaly_values,anomaly_value_indices,mean,std,output_cleaned_data_path)
+
 
