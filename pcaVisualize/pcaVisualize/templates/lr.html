@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="rate_80-20_lr_test">
+	<h2 class="lr"> The Test With %80 Train, %20 Test of data </h2>
+	<table>
+		<tr>
+			<th>Prediction\Real</th>
+			<th>TRUE</th>
+			<th>FALSE</th>
+		</tr>
+		<tr>
+			<th>TRUE</th>
+			<th>172</th>
+			<th>5</th>
+		</tr>
+		<tr>
+			<th>FALSE</th>
+			<th>1</th>
+			<th>14</th>
+		</tr>
+	</table>
+	<p class="lr"><i>Accuracy Rate : </i><b> 0.96875 </b></p>
+	<p class="lr"><i>F-Score : </i><b> 0.9828571428571429 </b></p>
+</div>
+
+<br>
+<hr/>
+<br>
+
+<div>
+	<h2 class="lr"> The Test With 10-Fold Cross-Validation </h2>
+	<table>
+		<tr>
+			<th> Prediction \ Real </th>
+			<th> TRUE </th>
+			<th> FALSE </th>
+		</tr>
+			<th> TRUE </th>
+			<th> 88.1 </th>
+			<th> 0.0 </th>
+		<tr>
+			<th> FALSE </th>
+			<th> 0.1 </th>
+			<th> 7.3 </th>
+		</tr>
+	</table>
+	<p class="lr"><i>Accuracy Rate : </i><b> 0.999 </b></p>
+	<p class="lr"><i>F-Score : </i><b> 0.9994413407821229 </b></p>
+</div>
+{% endblock %}

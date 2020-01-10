@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+        <title>Anomaly Detection</title>
+
+        <style>
+            nav{
+              display:flex;
+              flex-wrap:wrap;
+              background-color: steelblue;
+             }
+            nav a {
+              text-decoration: none;
+              display:block;
+              padding: 15px 25px;
+              text-align: center;
+              background-color: steelblue;
+              color:#464141;
+              margin:0;
+              font-family:sans-serif;
+            }
+            nav a:hover {
+              background-color: #777777;
+              color:#ffffff;
+            }
+            table, th, td{
+        		border: 1px solid black;
+        		border-collapse: collapse;
+        	}
+
+        	table{
+        		width: 60%;
+        		margin-left: auto;
+        		margin-right: auto;
+        	}
+
+        	.lr{
+        		text-align: center;
+        	}
+
+        	th, td{
+        		padding: 15px;
+        	}
+        	#user_input_file_seleciton{
+			    text-align: center;
+            }
+
+            body {
+                font: 10px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            }
+
+            .axis path,
+            .axis line {
+                fill: none;
+                stroke: #000;
+                shape-rendering: crispEdges;
+            }
+
+            .x.axis path {
+                display: none;
+            }
+
+            .line {
+                fill: none;
+                stroke: steelblue;
+                stroke-width: 1.5px;
+            }
+
+            .overlay {
+                fill: none;
+                pointer-events: all;
+            }
+
+            .focus circle {
+                fill: steelblue;
+            }
+
+            .focus text {
+                font-size: 14px;
+            }
+
+            .tooltip {
+                fill: white;
+                stroke: #000;
+            }
+
+            .tooltip-date, .tooltip-likes {
+                font-weight: bold;
+            }
+
+            #data_set_select{
+                width: 60%;
+        		margin-left: auto;
+        		margin-right: auto;
+                margin-top = 10%;
+                height = 10%;
+            }
+
+            .form-horizontal{
+                text-align: center;
+            }
+
+            #link_section{
+                width = 300px;
+            }
+
+            .form-group{
+                width: 60%;
+        		margin-left: auto;
+        		margin-right: auto;
+        		back
+            }
+
+            #one-item-labelled-result{
+                width : 350px;
+                height : 200px;
+            }
+
+            #PCA-columns-selection-div{
+                text-align : center;
+            }
+
+            .PCA-columns{
+                width = 20%;
+            }
+
+            #parameters{
+                text-align : center;
+            }
+
+            #apply-button-field{
+                text-align : center;
+            }
+
+            .form-control{
+                text-align : center;
+            }
+        </style>
+        <script src="https://d3js.org/d3.v4.js"></script>
+
+    </head>
+
+    <body>
+
+        {% include 'navbar.html' %}
+
+
+        {% block content %}
+
+            <!--
+            <div id="data_set_select">
+                <br>
+                <br>
+                <br>
+                <h3 class="data_set_select_form"> The Investigated Data Set Selection </h3>
+                <form class="data_set_select_form">
+
+                    <input type="text" name="csv_file_link" value="", id="link_section"> <input type="submit" value="Select">
+
+                </form>
+            </div>
+            -->
+
+
+
+
+
+
+            <!-- BURAYA DÖNEBİLEN
+
+            <form action="" method="POST" enctype="multipart/form-data" class="form-horizontal">
+                {% csrf_token %}
+                </br>
+                </br>
+                </br>
+                <div class="form-group">
+                    <label for="name" class="col-md-3 col-sm-3 col-xs-12 control-label"> <font size="3"> <b> Select the Data Set that will Investigated: </b> </font> </label>
+                    </br>
+                    </br>
+                    <div class="col-md-8">
+                        <input type="file" name="csv_file" id="csv_file" required="True" class="form-control">
+                    </div>
+                </div>
+                </br>
+                </br>
+                <div class="form-group">
+                    <div class="col-md-3 col-sm-3 col-xs-12 col-md-offset-3" style="margin-bottom:10px;">
+                         <button class="btn btn-primary"> <span class="glyphicon glyphicon-upload" style="margin-right:5px;"></span>Select </button>
+                    </div>
+                </div>
+            </form>
+
+            <br>
+            <br>
+            <hr>
+
+            <from action="" method="POST" >
+
+                {% csrf_token %}
+                <br>
+                <br>
+                <div id="PCA-columns-selection-div">
+
+                    <h3> <b> The Numerical Filed Selection for PCA-based Anomaly Detection </b> </h3>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> ktime </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> container </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> node </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> io_usage </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> time </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> pids </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> ram_limit </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> cpu_percent </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> io_limit </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> network_limit </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> network_usage </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> ram_usage </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> customer_id </font><br>
+                    <input type="checkbox" class="PCA-columns"> <font size="3"> application_id </font><br>
+
+                </div>
+            </from>
+
+            <hr>
+
+            <from action="" method="POST" >
+
+                {% csrf_token %}
+                <br>
+                <br>
+                <div id="parameters">
+                    <font size="3"> <b> Select the dimension that keeps the time epoch value : </b> </font> <br>
+                    <br>
+                    <select name="time-epoch">
+                        <option value="ktime" selected>ktime</option>
+                        <option value="container">container</option>
+                        <option value="node">node</option>
+                        <option value="io_usage">io_usage</option>
+                        <option value="time">time</option>
+                        <option value="pids">pids</option>
+                        <option value="ram_limit">ram_limit</option>
+                        <option value="cpu_percent">cpu_percent</option>
+                        <option value="io_limit">io_limit</option>
+                        <option value="network_limit">network_limit</option>
+                        <option value="network_usage">network_usage</option>
+                        <option value="ram_usage">ram_usage</option>
+                        <option value="customer_id">customer_id</option>
+                        <option value="application_id">application_id</option>
+                    </select>
+                    <br>
+                    <br>
+                    <font size="3"> <b> Select the confidence level :  </b> </font>
+                    <input type="text" name="confidence-level">
+                </div>
+
+            </from>
+
+        <hr>
+
+        <div id="apply-button-field">
+            <button class="btn btn-primary"> <span class="glyphicon glyphicon-upload" style="margin-right:5px;"></span>Apply </button>
+        </div>
+
+        -->
+
+        {% include 'data_input.html' %}
+
+
+        {% endblock %}
+
+    </body>
+
+</html>
