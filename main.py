@@ -1,14 +1,22 @@
 from pyspark.sql import SparkSession
 import os
 import pca
+import lr
 import data_cleaner
+import timeit
+import time
+from pyspark.sql.functions import monotonically_increasing_id
+from pyspark.sql import context as sqlContext
+import pandas as pd
 
 
 
 # This funciton find all .csv files' names
-# PARAMETERS :
+# INPUTS :
 # filePath -> Which folder must be detected.
-# It returns .csv files' names (without .csv parts)
+
+# OUTPUT
+# onlyFiles : Returns .csv files' names (without .csv parts)
 def csvFileDetecter (filePath):
     # This code is extract all files at the path named filePath
     onlyFiles = [f for f in os.listdir(filePath) if os.path.isfile(os.path.join(filePath, f))]
@@ -33,77 +41,21 @@ def csvFileDetecter (filePath):
 
     return onlyFiles
 
-
+# spark session is began.
 spark = SparkSession.builder.appName("PCA").getOrCreate()
 
-dataFilePath = "E:\\PERSONAL ITEMS\\LESSON ITEMS\\SEVENTH TERM\\BİTİRME\\Data\\AnomalyDetection\\dataset"
-outputExcelPath = "E:\\PERSONAL ITEMS\\LESSON ITEMS\\SEVENTH TERM\\BİTİRME\\Analiz\\Excel Results"
+# The path of data and the path of outputs are declared.
+directory_path = os.getcwd()
+print("directory path")
+print(directory_path)
 
-#data = spark.read.option("header","true").option("inferSchema","true").format("csv")
-df = spark.read.option("header","true").option("inferSchema","true").csv(dataFilePath + "\\1.csv")
+
+
+
 
 from pyspark.ml.feature import PCA,StandardScaler,VectorAssembler
 
-def PCA_Implementation(csvFileNames, columns, testNumbers, pcaKValues,dataPath, outputExcelPath) :
-    for csv in range(len(csvFileNames)):
-        df = spark.read.option("header","true").option("inferSchema","true").csv(dataPath + "\\" + csvFileNames[csv] + ".csv")
-        for col in range(len(columns)):
-            for test in range(testNumbers[col]):
-
-                # VectorAssembler reduced columns that should be multiple columns to one column value
-                assembler = VectorAssembler(
-                    #inputCols=["ram_usage","cpu_percent","io_usage","network_usage"],
-                    inputCols=columns[col],
-                    outputCol="features"
-                )
-
-                # It transformed.
-                output = assembler.transform(df)
-
-                scaler = StandardScaler(inputCol="features",
-                                        outputCol="scaledFeatures",
-                                        withStd=True,
-                                        withMean=False)
-
-                # Compute summary statistics by fitting the StandardScaler
-                scalerModel = scaler.fit(output)
-
-                # Normalize each feature to have unit standard deviation.
-                scaledData = scalerModel.transform(output)
-                #scaledData.show()
-
-                pca = PCA(k=pcaKValues[col][test], inputCol="features", outputCol="pca_features").fit(scaledData)
-
-                pcaDf = pca.transform(scaledData)
-                results = pcaDf.select("pca_features")
-                #results.show()
-
-                # Results extracted to excel file
-                # Here excel file's name arrangement
-                # Format :
-                # [csv_file_name]_[column_name]_K=[pca_k_value].xlsx
-                # OR for multiple column usage :
-                # [csv_file_name]_[column_name]+[column_name]+[column_name]_K=[pca_k_value].xlsx
-
-                # As a string, csv file name is assign as a first value.
-                fileName = csvFileNames[csv]
-                # According to multiple column name usage, they are added.
-                for ind in range(len(columns[col])):
-                    # For multiple column usage, '+' added to between 2 column name
-                    if(ind > 0):
-                        fileName += '+' + columns[col][ind]
-                    # For first column name, '_' is used as reagent
-                    else :
-                        fileName += '_' + columns[col][ind]
-
-                # Finally used k value at PCA algorithm and file tpye is added.
-                fileName += '_K=' + str(pcaKValues[col][test]) + '.xlsx'
-
-                # Here, file is extracted to target path.
-                results.toPandas().to_excel(fileName)
-                print(fileName + " is created at " + outputExcelPath)
-                print('\n')
-
+# This function
 def wrongNumberException(arrayLength,textString) :
     value = int(input(textString))
     while(value < 0 or value > arrayLength):
@@ -111,117 +63,31 @@ def wrongNumberException(arrayLength,textString) :
         value = int(input("Enter file name indis (the number that wrote on the left of its name) : "))
     return value
 
+# This function provides the printing data of array
+
+# INPUT
+# array : The array that will print.
+
+# OUTPUT
+# console print out of data.
 def valuePrinting(array) :
     for ind in range(len(array)):
         print('[' + str(ind) + '] : ' + array[ind])
 
-def excelOutputs(pca_data_frame,csvFileName,column_names,pca_k_value,output_path):
-    # Results extracted to excel file
-    # Here excel file's name arrangement
-    # Format :
-    # [csv_file_name]_[column_name]_K=[pca_k_value].xlsx
-    # OR for multiple column usage :
-    # [csv_file_name]_[column_name]+[column_name]+[column_name]_K=[pca_k_value].xlsx
+# This function collect the content of data that is labelled as anomaly by PCA algorithm.
 
-    # As a string, csv file name is assign as a first value.
-    fileName = csvFileName
-    # According to multiple column name usage, they are added.
-    for ind in range(len(column_names)):
-        # For multiple column usage, '+' added to between 2 column name
-        if (ind > 0):
-            fileName += '+' + column_names[ind]
-        # For first column name, '_' is used as reagent
-        else:
-            fileName += '_' + column_names[ind]
+# INPUT
+# dataFrame :
+# selected_column_names :
+# anomaly_indices : The indices of anomaly values came from PCA algorithm.
 
-    # Finally used k value at PCA algorithm and file tpye is added.
-    fileName += '_K=' + str(pca_k_value) + '.xlsx'
-
-    # Here, file is extracted to target path.
-    pca_data_frame.toPandas().to_excel(output_path + '\\' + fileName)
-    print(fileName + " is created at " + outputExcelPath)
-    print('\n')
-
-def PCA_calculation(dataFrame,csvFileName,column_values,pca_k_value,output_path):
-    # VectorAssembler reduced columns that should be multiple columns to one column value
-    assembler = VectorAssembler(
-        # inputCols=["ram_usage","cpu_percent","io_usage","network_usage"],
-        inputCols=column_values,
-        outputCol="features"
-    )
-
-    # It transformed.
-    output = assembler.transform(dataFrame)
-
-    scaler = StandardScaler(inputCol="features",
-                            outputCol="scaledFeatures",
-                            withStd=True,
-                            withMean=False)
-
-    # Compute summary statistics by fitting the StandardScaler
-    scalerModel = scaler.fit(output)
-
-    # Normalize each feature to have unit standard deviation.
-    scaledData = scalerModel.transform(output)
-    # scaledData.show()
-
-    pca = PCA(k=pca_k_value, inputCol="features", outputCol="pca_features").fit(scaledData)
-
-    pcaDf = pca.transform(scaledData)
-    results = pcaDf.select("pca_features")
-    # results.show()
-
-    print("echo success")
-    return results
-
-# This function checks the equivalance between the number of indices that user entered and his/her indice enterance
-def entered_column_count_control(input_string, column_count):
-    if input_string.count(',') == (column_count-1) :
-        return True
-    elif input_string.count(',') < (column_count-1):
-        print("YOU ENTERED INDICE VALUES BUT THERE ARE MINUS VALUES! PLEASE ENTER AGAIN!")
-        return False
-    else :
-        print("YOU ENTERD EXTRA INDICE VALUES! PLEASE ENTER AGAIN!")
-        return False
-
-def entered_column_indice_control(input_string, dataFrame_column_count):
-    indis = 0
-    indice_values = input_string.split(',')
-
-    while (indis < dataFrame_column_count) and (int(indice_values[indis]) >= 0) and (int(indice_values[indis]) < dataFrame_column_count) :
-        indis = indis + 1
-
-    if indis == dataFrame_column_count :
-        return int(indice_values)
-    else :
-        print("YOU ENTERD WRONG INDICE VALUE! PLEASE ENTER AGAIN!")
-        return []
-
-def column_input_enterance(dataFrame, column_names, selected_count_number):
-    input_string = input("Enter the indices of column that you want to use at PCA calculation. "
-                         "[For seperating indices, you have to use comma(',') | Ex : 1,2,3] : ")
-
-    while(entered_column_count_control(input_string,selected_count_number) == False) :
-        input_string = input("Enter the indices of column that you want to use at PCA calculation. "
-                             "[For seperating indices, you have to use comma(',') | Ex : 1,2,3] : ")
-
-    entered_column_indices = entered_column_indice_control(input_string,len(column_names))
-    while(entered_column_indices.count() == 0):
-        input_string = input("Enter the indices of column that you want to use at PCA calculation. "
-                             "[For seperating indices, you have to use comma(',') | Ex : 1,2,3] : ")
-        entered_column_indices = entered_column_indice_control(input_string,column_names.count())
-
-    selected_column_names = []
-
-    for indis in range(len(entered_column_indices)) :
-        selected_column_names.append(column_names[entered_column_indices[indis]])
-
-    return entered_column_indices,selected_column_names
-
+# OUTPUT
+# anomaly_values : The 2-D array that keeps data that is labelled as anomaly by PCA.
 def obtain_anomaly_values(dataframe, selected_column_names, anomaly_indices):
+    # We extract the data from dataFrame according to selected_column_names and we transform it to list.
     dataSet = dataframe.select(selected_column_names).toPandas().values.tolist()
 
+    # anomaly_values keeps the return anomaly data values.
     anomaly_values = [[]]
     for indis in range(len(anomaly_indices)):
         anomaly_values.insert(indis,dataSet[anomaly_indices[indis]])
@@ -255,48 +121,10 @@ def cleaned_from_anomalies_dataframe(dataframe, column_names, selected_column_in
             if anomaly_values[row][indis] > (mean_array[indis] + std_array[indis]):
                 #pandas_df.iloc[anomaly_indices[row]][selected_column_indice[indis]] = mean_array[indis] + std_array[indis]
                 pandas_df.at[anomaly_indices[row],selected_column_indice[indis]] = mean_array[indis] + std_array[indis]
-    pandas_df.to_excel(arranged_data_path + '\\' + 'cleaned_data.xlsx')
+    pandas_df.to_excel(arranged_data_path + '/' + 'cleaned_data.xlsx')
 
-csvFileNames = csvFileDetecter(dataFilePath)
-#print(csvFileNames)
 
-#print(df.columns)
-relevant_cols = [['cpu_percent'],['ram_usage'],['network_usage'],['io_usage'],["cpu_percent","ram_usage"]]
-#print(relevant_cols)
-
-pca_test_numbers = [1,1,1,1,2]
-pca_tests_k_values = [[1],[1],[1],[1],[1,2]]
-#print(pca_test_number)
-#print(pca_tests_k_values)
-
-#PCA_Implementation(csvFileNames, relevant_cols, pca_test_numbers, pca_tests_k_values, dataFilePath , outputExcelPath)
-
-"""
-print("In data path, there are these files.\n")
-valuePrinting(csvFileNames)
-print("\n")
-print("Select one of them.")
-csvInput = wrongNumberException(len(csvFileNames),"Enter file name indis (the number that wrote on the left of its name) : ")
-
-print('\n\n\n')
-
-df = spark.read.option("header", "true").option("inferSchema", "true").csv(dataFilePath + "\\" + csvFileNames[csvInput] + ".csv")
-column_names = df.columns
-print("There are these columns in data.\n\nCOLUMN NAMES :")
-valuePrinting(column_names)
-
-col_count = int(input("Enter the number of column that you want to reduce : "))
-col_values = []
-for ind in range(col_count):
-    col_values.append(column_names[wrongNumberException(len(column_names),"Enter the column indis : ")])
-print(col_values)
-
-pca_k_value = int(input("Enter the K value for PCA algorithm : "))
-
-pca_result = PCA_calculation(df,csvFileNames[csvInput],col_values,pca_k_value,outputExcelPath)
-
-print(pca_result.values)
-"""
+csvFileNames = csvFileDetecter(directory_path)
 
 print("In data path, there are these files.\n")
 valuePrinting(csvFileNames)
@@ -308,7 +136,7 @@ csvInput = wrongNumberException(len(csvFileNames),
 print('\n\n\n')
 
 df = spark.read.option("header", "true").option("inferSchema", "true").csv(
-    dataFilePath + "\\" + csvFileNames[csvInput] + ".csv")
+    directory_path + "/" + csvFileNames[csvInput] + ".csv")
 column_names = df.columns
 print("There are these columns in data.\n\nCOLUMN NAMES :")
 valuePrinting(column_names)
@@ -320,19 +148,48 @@ selected_column_indices = input("Enter indice values : ").split(',')
 for indis in range(len(selected_column_indices)):
     selected_column_names.append(column_names[int(selected_column_indices[indis])])
 
+time_col = int(input("Enter the indice of dimension that represents the time value : "))
+time_col_name = column_names[time_col]
+
+
+
 confidence_level = float(input("Please enter the confidence level : (formatted like 0.1) : "))
 
-anomaly_value_indices = pca.anomalyDetectionWithPCA(dataFrame=df, selected_column_names=selected_column_names, confidence_level=confidence_level)
+
+
+
+
+start_time = time.time()
+anomaly_value_indices = pca.anomalyDetectionWithPCA(dataFrame=df, selected_column_names=selected_column_names, confidence_level=confidence_level, time_column_name=time_col_name)
+end_time = time.time()
+print("PCA performance measurements : ")
+execution_time_of_pca = end_time - start_time
+print("PCA elapsed time average : ")
+print(execution_time_of_pca)
 
 anomaly_column = []
+normal_column = []
 
 for ind in range(df.count()):
     anomaly_column.append(0)
+
+last_element = 0
+for indis in range(len(anomaly_value_indices)):
+    for element in range(anomaly_value_indices[indis] - last_element - 1):
+        normal_column.append(element+last_element+1)
+    last_element = anomaly_value_indices[indis]
+
+for element in range(df.count() - last_element - 1):
+    normal_column.append(last_element+element+1)
+
+last_anomaly_indice = 0
 
 for ind in range(len(anomaly_value_indices)):
     anomaly_column[anomaly_value_indices[ind]] = 1
 
 print(anomaly_column)
+print(normal_column)
+print("len : " + str(len(anomaly_value_indices) + len(normal_column)))
 
 df_pandas = df.select(selected_column_names).toPandas()
 #print(df_pandas)
@@ -372,6 +229,260 @@ print("len of out bound anomalies : " + str(len(out_bound_anomalies)))
 
 output_cleaned_data_path = "E:\\PERSONAL ITEMS\\LESSON ITEMS\\SEVENTH TERM\\BİTİRME\\Analiz\\Temizlenmis Veri"
 
-df_new = cleaned_from_anomalies_dataframe(df,column_names,selected_column_indices,anomaly_values,anomaly_value_indices,mean,std,output_cleaned_data_path)
+#df_new = cleaned_from_anomalies_dataframe(df,column_names,selected_column_indices,anomaly_values,anomaly_value_indices,mean,std,output_cleaned_data_path)
+
+
+from pyspark.sql import Row
+
+df_x4 = spark.createDataFrame([Row(**{'Anomaly': x}) for x in anomaly_column])
+
+def flatten_row(r):
+    r_ =  r.features.asDict()
+    r_.update({'row_num': r.row_num})
+    return Row(**r_)
+
+def add_row_num(df):
+    df_row_num = df.rdd.zipWithIndex().toDF(['features', 'row_num'])
+    df_out = df_row_num.rdd.map(lambda x : flatten_row(x)).toDF()
+    return df_out
+
+df = add_row_num(df)
+df_x4 = add_row_num(df_x4)
+df = df.join(df_x4, on='row_num').drop('row_num')
+
+
+#anomaly_df = spark.createDataFrame(pd.DataFrame(added_anomalies))
+#print(anomaly_df.head())
+
+print(df)
+print(df.columns)
+
+print(df_pandas)
+
+
+print("normal columns")
+print(normal_column)
+
+print("anomaly columns")
+print(anomaly_value_indices)
+
+
+print(" ---------------------- %80 TRAIN DATA - %20 TEST DATA OPTIONS ---------------------- ")
+
+train_dataset_indices = []
+size_limit_for_normal = int(len(normal_column) * 0.8)
+size_limit_for_anomaly = int(len(anomaly_value_indices) * 0.8)
+print("size limiter")
+print(size_limit_for_normal)
+print(size_limit_for_anomaly)
+train_dataset_indices.extend(normal_column[:size_limit_for_normal])
+train_dataset_indices.extend(anomaly_value_indices[:size_limit_for_anomaly])
+#train_dataset_indices.sort()
+
+test_dataset_indices = []
+test_dataset_indices.extend(normal_column[size_limit_for_normal:])
+test_dataset_indices.extend(anomaly_value_indices[size_limit_for_anomaly:])
+#test_dataset_indices.sort()
+
+print("size of train")
+print(len(train_dataset_indices))
+print("size of test")
+print(len(test_dataset_indices))
+print("size of dataframe")
+print(len(anomaly_values))
+
+print("train indices :")
+print(train_dataset_indices)
+print("test indices : ")
+print(test_dataset_indices)
+
+df_train = df_pandas.take(train_dataset_indices)
+print(df_train)
+print('\n\n\n')
+real_df_test = df_pandas.take(test_dataset_indices)
+
+
+from pyspark.sql.types import *
+
+pyspark_train_df = spark.createDataFrame(df_train)
+df_test = real_df_test[selected_column_names]
+print(df_test)
+pyspark_test_df = spark.createDataFrame(df_test)
+print("train dataset colummns")
+print(pyspark_train_df.columns)
+
+"""
+print("train")
+print(pyspark_train_df)
+print("\n\n")
+print("test")
+print(pyspark_test_df)
+"""
+
+print("Logistic Regression performance measurement : ")
+start_time = time.time()
+logistic_regression_accuracy_summary = lr.calculateLogisticRegression(pyspark_train_df,pyspark_test_df,real_df_test)
+end_time = time.time()
+logistic_regression_exec_time = end_time - start_time
+print("Execution time of logistic regression : ")
+print(logistic_regression_exec_time)
+
+accuracy_rate = (logistic_regression_accuracy_summary[3] + logistic_regression_accuracy_summary[0]) / len(test_dataset_indices)
+print("accuracy rate  :")
+print(accuracy_rate)
+
+f_score = 2 * logistic_regression_accuracy_summary[0] / (2 * logistic_regression_accuracy_summary[0] + logistic_regression_accuracy_summary[1] + logistic_regression_accuracy_summary[2])
+print("f-score : ")
+print(f_score)
+
+
+print("-------------------------------------------------------------------------------------------------------------------------")
+size_limit_for_normal = int(len(normal_column) * 0.1)
+size_limit_for_anomaly = int(len(anomaly_value_indices) * 0.1)
+
+print("-------len--------")
+print("normal " + str(len(normal_column)))
+print("anomaly" + str(len(anomaly_value_indices)))
+print("-----------------")
+
+print("normal")
+print(size_limit_for_normal)
+print(normal_column)
+print("anomaly")
+print(size_limit_for_anomaly)
+print(anomaly_value_indices)
+print("--------")
+data_indices = [[]]
+for indis in range(9):
+    temp = []
+    temp.extend(normal_column[indis*size_limit_for_normal:(indis+1)*size_limit_for_normal])
+    temp.extend(anomaly_value_indices[indis*size_limit_for_anomaly:(indis+1)*size_limit_for_anomaly])
+    temp.sort()
+    data_indices.append(temp)
+
+temp = []
+temp.extend(normal_column[9*size_limit_for_normal:])
+print("-----temp------")
+print(temp)
+temp.extend(anomaly_value_indices[9*size_limit_for_anomaly:])
+temp.sort()
+print("\n\n")
+data_indices.append(temp)
+data_indices.remove(data_indices[0])
+
+print(data_indices)
+
+for indis in range(len(data_indices)):
+    print(data_indices[indis])
+    print("size : " + str(len(data_indices[indis])))
+
+confusion_matrix_values = [[]]
+accuracy_rates = []
+f_scores = []
+exec_time = []
+
+for indis in range(len(data_indices)):
+    train_dataset_indices = []
+    test_dataset_indices = []
+
+    # Obtaining train and test dataset indexes.
+    for indis2 in range(len(data_indices)):
+        if indis != indis2 :
+            train_dataset_indices.extend(data_indices[indis])
+        else:
+            test_dataset_indices.extend(data_indices[indis])
+
+    # Obtained data from pandas DataFrame object according to index informations
+    df_train = df_pandas.take(train_dataset_indices)
+    real_df_test = df_pandas.take(test_dataset_indices)
+
+    pyspark_train_df = spark.createDataFrame(df_train)
+    df_test = real_df_test[selected_column_names]
+    pyspark_test_df = spark.createDataFrame(df_test)
+
+    start_time = time.time()
+    logistic_regression_accuracy_summary = lr.calculateLogisticRegression(pyspark_train_df,pyspark_test_df,real_df_test)
+    end_time = time.time()
+    exec_time.append(end_time - start_time)
+
+    accuracy_rate = (logistic_regression_accuracy_summary[3] + logistic_regression_accuracy_summary[0]) / len(
+        test_dataset_indices)
+    print("accuracy rate : " + str(accuracy_rate))
+
+    f_score = 2 * logistic_regression_accuracy_summary[0] / (
+                2 * logistic_regression_accuracy_summary[0] + logistic_regression_accuracy_summary[1] +
+                logistic_regression_accuracy_summary[2])
+    print("f-score : " + str(f_score))
+
+    confusion_matrix_values.append(logistic_regression_accuracy_summary)
+    accuracy_rates.append(accuracy_rate)
+    f_scores.append(f_score)
+
+confusion_matrix_values.remove(confusion_matrix_values[0])
+
+ave_confusion_matrix = []
+print("about confusion matrix")
+print(len(confusion_matrix_values[0]))
+print(len(confusion_matrix_values))
+
+for indis in range(len(confusion_matrix_values[0])):
+    sum = 0
+    for indis2 in range(len(confusion_matrix_values)):
+        sum += confusion_matrix_values[indis2][indis]
+    print("sum" + str(sum/10))
+    ave_confusion_matrix.append(sum/(len(confusion_matrix_values)))
+
+print("ave confusion matrix")
+print(ave_confusion_matrix)
+print("----------------------")
+
+sum = 0
+for indis in range(len(accuracy_rates)):
+    sum += accuracy_rates[indis]
+
+ave_accuracy_rate = sum / len(accuracy_rates)
+
+print("ave accuracy rates")
+print(ave_accuracy_rate)
+print("----------------------")
+
+sum = 0
+for indis in range(len(f_scores)):
+    sum += f_scores[indis]
+
+ave_f_score = sum / len(f_scores)
+
+
+print("ave f-score")
+print(ave_f_score)
+print("----------------------")
+
+sum = 0
+for indis in range(len(exec_time)):
+    sum += exec_time[indis]
+
+ave_exec_time = sum / len(exec_time)
+
+print("ave exec time")
+print(ave_exec_time)
+
+
+
+
+
+
+
+"""
+columns = []
+columns.extend(selected_column_names)
+columns.append("Anomaly")
+df_lr = df.select([c for c in df.columns if c in columns]).show()
+print(df_lr)
+"""
+
+# Configuration an ML pipeline, which consists of tree stages : tokenizer, hashingTF and lr.
+
+
+
 
 

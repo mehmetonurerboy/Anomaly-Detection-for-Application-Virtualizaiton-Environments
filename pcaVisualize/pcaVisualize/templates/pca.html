@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="pca-graph-all">
+
+    <script>
+
+        var margin = { top: 30, right: 120, bottom: 200, left: 50 },
+            width = 3500 - margin.left - margin.right,
+            height = 700 - margin.top - margin.bottom,
+            tooltip = { width: 100, height: 100, x: 10, y: -30 };
+
+        var bisect = d3.bisector(function(d) { return d.Index;}).left;
+
+        var formatValue = d3.format(",");
+
+
+
+        var x = d3.scaleLinear()
+                .range([0, width]);
+
+        var y = d3.scaleLinear()
+                .range([height, 0]);
+
+        var xAxis = d3.axisBottom(x);
+
+        var yAxis = d3.axisLeft(y);
+
+        var line = d3.line()
+            .x(function(d) { return x(d.Index); })
+            .y(function(d) { return y(d.SPE); });
+
+        var svg = d3.select("#pca-graph-all").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.csv("https://gist.githubusercontent.com/mehmetonurerboy/3fad652f0293913832c41ad81e8bbf71/raw/8edbe624e9bc3b21a7486afb7b09edd979c69f51/last-version-data.csv",
+
+            function(data) {
+                console.log(data);
+                console.log(data[0].Index);
+                console.log(parseFloat(data[0] .Index));
+
+                console.log("min x : ");
+                console.log(parseInt(data[0].Index));
+                console.log(parseInt(data[data.length - 1].Index));
+                x.domain([parseInt(data[0].Index), parseInt(data[data.length - 1].Index)]);
+                y.domain([0, d3.max(data, function(d) { return parseFloat(d.SPE); })]);
+                console.log("max SPE : ");
+                console.log(parseFloat(d3.max(data, function(d) { return d.SPE;})));
+
+                svg.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis);
+
+                svg.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis)
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 20)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Number of Likes");
+
+                svg.append("path")
+                    .datum(data)
+                    .attr("class", "line")
+                    .attr("d", line);
+
+                var focus = svg.append("g")
+                    .attr("class", "focus")
+                    .style("display", "none");
+
+                focus.append("circle")
+                    .attr("r", 5)
+                    //.style('fill','red');
+
+                focus.append("rect")
+                    .attr("class", "tooltip")
+                    .attr("width", 275)
+                    .attr("height", 120)
+                    .attr("x", 10)
+                    .attr("y", -22)
+                    .attr("rx", 4)
+                    .attr("ry", 4);
+
+                focus.append("text")
+                    .attr("x", 18)
+                    .attr("y", 0)
+                    .text(" ");
+
+                focus.append("text")
+                    .attr("x", 18)
+                    .attr("y", 15)
+                    .text("SPE:");
+
+                focus.append("text")
+                    .attr("class", "spe")
+                    .attr("x", 60)
+                    .attr("y", 15);
+
+                focus.append("text")
+                    .attr("x", 18)
+                    .attr("y", 30)
+                    .text("CPU Percent Usage : ");
+
+                focus.append("text")
+                    .attr("class", "tooltip-cpu")
+                    .attr("x", 160)
+                    .attr("y", 30);
+
+                focus.append("text")
+                    .attr("x", 18)
+                    .attr("y", 45)
+                    .text("RAM Usage : ");
+
+                focus.append("text")
+                    .attr("class","tooltip-ram")
+                    .attr("x",105)
+                    .attr("y",45);
+
+                focus.append("text")
+                    .attr("x",18)
+                    .attr("y",60)
+                    .text("IO Usage : ");
+
+                focus.append("text")
+                    .attr("class","tooltip-io")
+                    .attr("x",85)
+                    .attr("y",60);
+
+                focus.append("text")
+                    .attr("x",18)
+                    .attr("y",75)
+                    .text("Network Usage : ");
+
+                focus.append("text")
+                    .attr("class","tooltip-network")
+                    .attr("x",125)
+                    .attr("y",75);
+
+                focus.append("text")
+                    .attr("x",18)
+                    .attr("y",90)
+                    .text("Container : ");
+
+                focus.append("text")
+                    .attr("class","tooltip-container")
+                    .attr("x", 95)
+                    .attr("y",90);
+
+                svg.append("rect")
+                    .attr("class", "overlay")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .on("mouseover", function() { focus.style("display", null); })
+                    .on("mouseout", function() { focus.style("display", "none"); })
+                    .on("mousemove", mousemove);
+
+                function mousemove() {
+                    var x0 = x.invert(d3.mouse(this)[0]),
+                        i = bisect(data, x0, 1),
+                        d0 = data[i - 1],
+                        d1 = data[i],
+                        d = x0 - d0.Index > d1.Index - x0 ? d1 : d0;
+                    console.log("anomaly");
+                    console.log(d.SPE);
+                    console.log("threshold");
+                    console.log(d.Threshold);
+
+                    focus.attr("transform", "translate(" + x(d.Index) + "," + y(d.SPE) + ")");
+                    focus.select(".spe").text(formatValue(d.SPE));
+                    focus.select(".tooltip-cpu").text(formatValue(parseFloat(d.cpu_percent)));
+                    focus.select(".tooltip-ram").text(formatValue(parseFloat(d.ram_usage)));
+                    focus.select(".tooltip-io").text(formatValue(parseFloat(d.io_usage)));
+                    focus.select(".tooltip-network").text(formatValue(parseFloat(d.network_usage)));
+                    focus.select(".tooltip-index").text(d.Index);
+                    focus.select(".tooltip-container").text(d.Container);
+
+                    if (parseFloat(d.SPE) > parseFloat(d.Threshold)){
+                        focus.select("circle")
+                            .style('fill','red');
+
+                        focus.select("text")
+                            .attr("x", 18)
+                            .attr("y", 0)
+                            .text("Anomaly tespit edildi.")
+                            .style("font-weight","bold");
+                    }else{
+                        focus.select("circle")
+                            .style('fill','blue');
+
+                        focus.select("text")
+                            .attr("x", 18)
+                            .attr("y", 0)
+                            .text("");
+                    }
+                }
+            }
+        );
+
+    </script>
+</div>
+{% endblock %}
+
+
+
+
+
+
