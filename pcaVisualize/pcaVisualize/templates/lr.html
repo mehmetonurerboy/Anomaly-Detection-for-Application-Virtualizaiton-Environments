@@ -11,17 +11,17 @@
 		</tr>
 		<tr>
 			<th>TRUE</th>
-			<th>172</th>
-			<th>5</th>
+			<th> {{ result_80_train_20_test_table_val_1 }} </th>
+			<th> {{ result_80_train_20_test_table_val_2 }} </th>
 		</tr>
 		<tr>
 			<th>FALSE</th>
-			<th>1</th>
-			<th>14</th>
+			<th> {{ result_80_train_20_test_table_val_3 }} </th>
+			<th> {{ result_80_train_20_test_table_val_4 }} </th>
 		</tr>
 	</table>
-	<p class="lr"><i>Accuracy Rate : </i><b> 0.96875 </b></p>
-	<p class="lr"><i>F-Score : </i><b> 0.9828571428571429 </b></p>
+	<p class="lr"><i>Accuracy Rate : </i><b> {{ result_80_train_20_test_accuracy_rate }} </b></p>
+	<p class="lr"><i>F-Score : </i><b> {{ result_80_train_20_test_f_score }} </b></p>
 </div>
 
 <br>
@@ -37,15 +37,15 @@
 			<th> FALSE </th>
 		</tr>
 			<th> TRUE </th>
-			<th> 88.1 </th>
-			<th> 0.0 </th>
+			<th> {{ result_10_fold_table_val_1 }} </th>
+			<th> {{ result_10_fold_table_val_2 }} </th>
 		<tr>
 			<th> FALSE </th>
-			<th> 0.1 </th>
-			<th> 7.3 </th>
+			<th> {{ result_10_fold_table_val_3 }} </th>
+			<th> {{ result_10_fold_table_val_4 }} </th>
 		</tr>
 	</table>
-	<p class="lr"><i>Accuracy Rate : </i><b> 0.999 </b></p>
-	<p class="lr"><i>F-Score : </i><b> 0.9994413407821229 </b></p>
+	<p class="lr"><i>Accuracy Rate : </i><b> {{ result_10_fold_accuracy_rate }} </b></p>
+	<p class="lr"><i>F-Score : </i><b> {{ result_10_fold_f_score }} </b></p>
 </div>
 {% endblock %}

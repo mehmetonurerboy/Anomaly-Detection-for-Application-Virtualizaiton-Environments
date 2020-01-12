@@ -6,20 +6,20 @@ class SelectFile(forms.Form):
 
 class ColumnSelection(forms.Form):
     column_enum = {
-        ("ktime", "Ktime Value"),
-        ("container", "Container Value"),
+        ("ktime", "Ktime"),
+        ("container", "Container"),
         ("node", "Node Name"),
         ("io_usage", "IO Usage"),
-        ("time", "Time Value"),
-        ("pids", "PIDS Value"),
-        ("ram_limit", "RAM Limit Value"),
-        ("cpu_percent", "CPU Percent Value"),
-        ("io_limit", "IO Limit Value"),
-        ("network_limit", "Network Limit Value"),
-        ("network_usage", "Network Usage Value"),
-        ("ram_usage", "RAM Usage Value"),
-        ("customer_id", "Customer ID Value"),
-        ("application_id","Application ID Value"),
+        ("time", "Time"),
+        ("pids", "PIDS"),
+        ("ram_limit", "RAM Limit"),
+        ("cpu_percent", "CPU Percent"),
+        ("io_limit", "IO Limit"),
+        ("network_limit", "Network Limit"),
+        ("network_usage", "Network Usage"),
+        ("ram_usage", "RAM Usage"),
+        ("customer_id", "Customer ID"),
+        ("application_id","Application ID"),
     }
 
     column_list_filter = forms.MultipleChoiceField(required=True,

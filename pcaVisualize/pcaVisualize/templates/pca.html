@@ -36,7 +36,7 @@
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        d3.csv("https://gist.githubusercontent.com/mehmetonurerboy/3fad652f0293913832c41ad81e8bbf71/raw/8edbe624e9bc3b21a7486afb7b09edd979c69f51/last-version-data.csv",
+        d3.csv("{{ csvLink }}",
 
             function(data) {
                 console.log(data);
