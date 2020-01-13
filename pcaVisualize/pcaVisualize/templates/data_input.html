@@ -2,12 +2,24 @@
 
 {% block content %}
 
-<div>
+<br>
+<br>
+<br>
+
+
+
+<div class="pca-data-input">
 	<form method="post" enctype="multipart/form-data">
-			{% csrf_token %}
-			<p> <font size="2"> <b> File Selection </b> </font> </p>
-			{{ form }}
-			<button type="submit">Start The PCA-based Anomaly Detection</button>
+		{% csrf_token %}
+		<input type="file" name="document">
+		<br>
+		<br>
+		<br>
+		{{ form }}
+		<br>
+		<br>
+		<br>
+		<button type="submit">Start The PCA-based Anomaly Detection</button>
 	</form>
 </div>
 

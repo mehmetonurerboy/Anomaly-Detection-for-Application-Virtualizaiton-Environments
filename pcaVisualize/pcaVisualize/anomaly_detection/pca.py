@@ -242,7 +242,7 @@ def fileOutputPcaDimensions(dataFrame,selected_column_names,time_column_name,ano
     lists.remove(lists[0])
 
     # The header of csv is arranged.
-    header_values = ["Index","Time","SPE","Threshold","Anomaly_status"]
+    header_values = ["Index","Time","SPE","Threshold","outlier_status"]
     for item in selected_column_names:
         header_values.append(item)
     header_values.append("Container")
