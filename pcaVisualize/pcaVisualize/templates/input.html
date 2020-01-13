@@ -1,31 +1,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
-<div id="user_input_file_seleciton">
-	<br>
-	<br>
-	<br>
-	<form>
-		<font size="3"> CPU Percentage: </font> <br>
-		<input type="text" name="cpu_percentage" value=""><br>
-		<font size="3"> RAM Usage: </font> <br>
-		<input type="text" name="ram_usage" value=""><br>
-		<font size="3"> IO Usage: </font> <br>
-		<input type="text" name="io_usage" value=""><br>
-		<font size="3"> Network Usage: </font> <br>
-		<input type="text" name="network_usage" value=""><br><br>
-		<input type="submit" value="Enter">
+<div class="lr-real-time">
+	<form method="post" enctype="multipart/form-data">
+		{% csrf_token %}
+		{{ form|linebreaks }}
+		<button type="submit">Enter</button>
 	</form>
+</div>
 
-	<br>
-	<br>
-	<br>
-	<br>
+<br>
+<hr>
+<br>
+<br>
 
-	<textarea name="one-item-labelled-result" disabled rows="10" cols="50" id="one-item-labelled-result"></textarea>
-	<br>
-	<br>
+<div class="lr-real-time">
+
+<textarea rows="10" cols="50" disabled>
+CPU Percentage : {{ cpu_percentage }}
+RAM Usage : {{ ram_usage }}
+IO Usage : {{ io_usage }}
+Network Usage : {{ network_usage }}
+Test Time : {{ test_time }}
+Anomaly Status : {{ anomaly_status }}
+</textarea>
+
 </div>
 
 {% endblock %}

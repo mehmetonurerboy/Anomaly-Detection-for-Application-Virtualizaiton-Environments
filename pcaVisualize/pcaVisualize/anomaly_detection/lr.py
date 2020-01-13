@@ -2,7 +2,7 @@ from pyspark.ml.feature import OneHotEncoderEstimator, StringIndexer, VectorAsse
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml import Pipeline
 
-def calculateLogisticRegression(train_dataframe,test_dataframe,test_df):
+def calculateLogisticRegression(train_dataframe,test_dataframe):
 
     #selectedCols = ['label', 'features'] + pyspark_train_df.columns
 
@@ -56,10 +56,8 @@ def calculateLogisticRegression(train_dataframe,test_dataframe,test_df):
     #print(type(predictions))
     #cross_validation_test(lr,pyspark_train_df,pyspark_test_df)
 
-    logistic_regression_result = logisticRegressionTest(predictions.toPandas(),test_df)
     print(predictions.count())
-    print(logistic_regression_result)
-    return logistic_regression_result
+    return predictions.toPandas()
 
 from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
 from pyspark.ml.evaluation import BinaryClassificationEvaluator

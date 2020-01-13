@@ -2,11 +2,16 @@ from pyspark.sql import SparkSession
 import os
 from . import pca
 from . import lr
-from pyspark.sql import Row
+from pyspark.sql import Row,SQLContext
 import time
+import pandas as pd
 
+def create_data_frame_from_list(spark,list,column_names):
+    df = pd.DataFrame(list)
+    df.rename(columns={0:column_names[0],1:column_names[1],2:column_names[2],3:column_names[3]},inplace=True)
 
-
+    df_spark = spark.createDataFrame(df)
+    return df_spark
 
 # This funciton find all .csv files' names
 # INPUTS :
@@ -276,6 +281,7 @@ def obtain_anomaly_columned_spark_data_frame(sparkSession, anomaly_column, dataF
 #print(anomaly_df.head())
 
 
+
 #print(" ---------------------- %80 TRAIN DATA - %20 TEST DATA OPTIONS ---------------------- ")
 
 def data_test_for_80_perc_train_20_perc_tests_data(sparkSession, df_pandas,selected_column_names, normal_column, anomaly_value_indices):
@@ -327,7 +333,8 @@ def data_test_for_80_perc_train_20_perc_tests_data(sparkSession, df_pandas,selec
 
     print("Logistic Regression performance measurement : ")
     start_time = time.time()
-    logistic_regression_accuracy_summary = lr.calculateLogisticRegression(pyspark_train_df,pyspark_test_df,real_df_test)
+    logistic_regression_prediction = lr.calculateLogisticRegression(pyspark_train_df,pyspark_test_df)
+    logistic_regression_accuracy_summary = lr.logisticRegressionTest(logistic_regression_prediction,real_df_test)
     end_time = time.time()
     logistic_regression_exec_time = end_time - start_time
     print("Execution time of logistic regression : ")
@@ -416,15 +423,14 @@ def data_set_test_with_10_folds_cross_validation(sparkSession, selected_column_n
         pyspark_test_df = sparkSession.createDataFrame(df_test)
 
         start_time = time.time()
-        logistic_regression_accuracy_summary = lr.calculateLogisticRegression(pyspark_train_df,pyspark_test_df,real_df_test)
+        logistic_regression_prediction = lr.calculateLogisticRegression(pyspark_train_df,pyspark_test_df)
+        logistic_regression_accuracy_summary = lr.logisticRegressionTest(logistic_regression_prediction,real_df_test)
         end_time = time.time()
         exec_time.append(end_time - start_time)
 
         accuracy_rate = (logistic_regression_accuracy_summary[3] + logistic_regression_accuracy_summary[0]) / len(
             test_dataset_indices)
         print("accuracy rate : " + str(accuracy_rate))
-
-        precision = logistic_regression_accuracy_summary[0] / (logistic_regression_accuracy_summary[0] + logistic_regression_accuracy_summary[2])
 
 
         f_score = 2 * logistic_regression_accuracy_summary[0] / (
