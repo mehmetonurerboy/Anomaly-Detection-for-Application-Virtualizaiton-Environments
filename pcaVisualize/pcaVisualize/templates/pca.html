@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% load static %}
 <div id="pca-graph-all">
 
     <script>
@@ -36,7 +37,7 @@
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        d3.csv("{{ csvLink }}",
+        d3.csv("{%  static 'general_anomaly.csv' %}",
 
             function(data) {
                 console.log(data);

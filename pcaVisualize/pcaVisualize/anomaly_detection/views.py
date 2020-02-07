@@ -126,10 +126,10 @@ def data_input_form(request):
             request.session['real-time_time_val'] = " "
             request.session['anomaly_status'] = " "
 
-            file_link = uploadFile.upload()
-            request.session['csvLink'] = file_link
+            # file_link = uploadFile.upload()
+            # request.session['csvLink'] = file_link
 
-            return render(request, 'pca.html', {'csvLink': file_link})
+            return render(request, 'pca.html')#, {'csvLink': file_link}
     else:
         columnForm = ColumnSelection()
 
